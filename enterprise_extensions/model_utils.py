@@ -182,6 +182,28 @@ class JumpProposal(object):
 
         return q, float(lqxy)
 
+    def draw_from_dm_gp_loop_prior(self, x, iter, beta):
+
+        q = x.copy()
+        lqxy = 0
+
+        signal_name = 'dm_gp_loop'
+
+        # draw parameter from signal model
+        param = np.random.choice(self.snames[signal_name])
+        if param.size:
+            idx2 = np.random.randint(0, param.size)
+            q[self.pmap[str(param)]][idx2] = param.sample()[idx2]
+
+        # scalar parameter
+        else:
+            q[self.pmap[str(param)]] = param.sample()
+
+        # forward-backward jump probability
+        lqxy = param.get_logpdf(x[self.pmap[str(param)]]) - param.get_logpdf(q[self.pmap[str(param)]])
+
+        return q, float(lqxy)
+
     def draw_from_dm1yr_prior(self, x, iter, beta):
 
         q = x.copy()
@@ -482,6 +504,16 @@ def setup_sampler(pta, outdir='chains', resume=False):
     if 'dm_gp' in jp.snames:
         print('Adding DM GP noise prior draws...\n')
         sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+
+    # DM GP noise prior draw
+    if 'dm_gp_loop' in jp.snames:
+        print('Adding DM GP noise prior draws...\n')
+        sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+
+    # DM SW noise prior draw
+    if 'dm_sw' in jp.snames:
+        print('Adding DM GP noise prior draws...\n')
+        sampler.addProposalToCycle(jp.draw_from_dm_sw_prior, 10)
 
     # DM annual prior draw
     if 'dm_s1yr' in jp.snames:
@@ -857,6 +889,16 @@ class HyperModel(object):
         if 'dm_gp' in self.snames:
             print('Adding DM GP noise prior draws...\n')
             sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+
+        # DM GP noise prior draw
+        if 'dm_gp_loop' in jp.snames:
+            print('Adding DM GP noise prior draws...\n')
+            sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+
+        # DM SW noise prior draw
+        if 'dm_sw' in jp.snames:
+            print('Adding DM GP noise prior draws...\n')
+            sampler.addProposalToCycle(jp.draw_from_dm_sw_prior, 10)
 
         # DM annual prior draw
         if 'dm_s1yr' in jp.snames:
