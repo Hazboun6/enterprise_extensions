@@ -507,8 +507,8 @@ def setup_sampler(pta, outdir='chains', resume=False):
 
     # DM GP noise prior draw
     if 'dm_gp_loop' in jp.snames:
-        print('Adding DM GP noise prior draws...\n')
-        sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+        print('Adding DM GP Loop noise prior draws...\n')
+        sampler.addProposalToCycle(jp.draw_from_dm_gp_loop_prior, 10)
 
     # DM SW noise prior draw
     if 'dm_sw' in jp.snames:
@@ -892,12 +892,12 @@ class HyperModel(object):
 
         # DM GP noise prior draw
         if 'dm_gp_loop' in jp.snames:
-            print('Adding DM GP noise prior draws...\n')
-            sampler.addProposalToCycle(jp.draw_from_dm_gp_prior, 10)
+            print('Adding DM GP Loop noise prior draws...\n')
+            sampler.addProposalToCycle(jp.draw_from_dm_gp_loop_prior, 10)
 
         # DM SW noise prior draw
         if 'dm_sw' in jp.snames:
-            print('Adding DM GP noise prior draws...\n')
+            print('Adding DM SW model prior draws...\n')
             sampler.addProposalToCycle(jp.draw_from_dm_sw_prior, 10)
 
         # DM annual prior draw
