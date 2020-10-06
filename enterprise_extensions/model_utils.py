@@ -377,6 +377,55 @@ class EmpiricalDistribution2D(object):
 
         return self._logpdf[ix, iy]
 
+class EmpiricalDistributionDD(object):
+    def __init__(self, param_names, samples, bins):
+        """
+            :param samples: samples for hist
+            :param bins: edges to use for hist (left and right)
+            make sure bins cover whole prior!
+            """
+        self.ndim = samples.shape[0]
+        self.param_names = param_names
+        if self.ndim != len(param_names):
+            err_msg = 'First sample array dimension and number of'
+            err_msg += ' param names must match.'
+            raise ValueError(err_msg)
+
+        self._Nbins = [len(b)-1 for b in bins]
+        hist, bin_edges = np.histogramdd(*samples, bins=bins)
+
+        self._edges = np.array([x_bins[:-1], y_bins[:-1]])
+        self._wids = np.diff([x_bins, y_bins])
+
+        area = np.outer(*self._wids)
+        hist += 1  # add a sample to every bin
+        counts = np.sum(hist)
+        self._pdf = hist / counts / area
+        self._cdf = np.cumsum((self._pdf*area).ravel())
+
+        self._logpdf = np.log(self._pdf)
+
+    def draw(self):
+        draw = np.random.rand()
+        draw_bin = np.searchsorted(self._cdf, draw)
+
+        idx = np.unravel_index(draw_bin, self._Nbins)
+        samp = [self._edges[ii, idx[ii]] + self._wids[ii, idx[ii]]*np.random.rand()
+                for ii in range(2)]
+        return np.array(samp)
+
+    def prob(self, params):
+        ix, iy = [min(np.searchsorted(self._edges[ii], params[ii]),
+                      self._Nbins[ii]-1) for ii in range(2)]
+
+        return self._pdf[ix, iy]
+
+    def logprob(self, params):
+        ix, iy = [min(np.searchsorted(self._edges[ii], params[ii]),
+                      self._Nbins[ii]-1) for ii in range(2)]
+
+        return self._logpdf[ix, iy]
+
 
 def make_empirical_distributions(paramlist, params, chain,
                                  burn=0, nbins=41, filename='distr.pkl'):
